@@ -4,7 +4,7 @@ class MySQLConnection
 {
 	public static $db;
 
-	public static function setConnection($connectionString, $user, $pass)
+	public static function init($connectionString, $user, $pass)
 	{
 		self::$db = new PDO($connectionString, $user, $pass);
 		return self::$db;

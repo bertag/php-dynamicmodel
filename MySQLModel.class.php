@@ -35,6 +35,7 @@ abstract class MySQLModel extends BasicModel
 
 		foreach($this->fields as $key => $value)
 		{
+			$value = $this->$key;
 			if(isset($value) && $value != '')
 			{
 				$fieldList .= "`" . $key . "`,";
@@ -46,7 +47,7 @@ abstract class MySQLModel extends BasicModel
 		$sql = "INSERT INTO `" . $this->table . "` (" . substr($fieldList, 0, -1) . ") VALUES (" . substr($valueList, 0, -1) . ")";
 
 		$query = $this->db->prepare($sql);
-		$query->excecute($values);
+		$query->execute($values);
 		return $this->db->lastInsertId();
 	}
 
@@ -59,6 +60,7 @@ abstract class MySQLModel extends BasicModel
 		$fieldList = '';
 		foreach($this->fields as $key => $value)
 		{
+			$value = $this->$key;
 			$fieldList .= "`" . $key . "`,";
 		}
 
@@ -72,7 +74,7 @@ abstract class MySQLModel extends BasicModel
 
 		foreach($response as $field=>$value)
 		{
-			$this->_setField($field,$value);
+			$this->$field = $value;
 		}
 	}
 
@@ -86,6 +88,7 @@ abstract class MySQLModel extends BasicModel
 		$values = array();
 		foreach($this->fields as $key=>$value)
 		{
+			$value = $this->$key;
 			$fieldList .= "`" . $key . "` = ?,";
 			$values[] = $value;
 		}
@@ -106,5 +109,33 @@ abstract class MySQLModel extends BasicModel
 		$sql = "DELETE FROM `" . $this->table . "` WHERE `" . $this->primary_key . "` = ? LIMIT 1";		
 		$query = $this->db->prepare($sql);
 		$query->execute(array($index));
+	}
+
+	public function save()
+	{
+		$insert_fieldList = '';
+		$update_fieldList = '';
+		$valueList = '';
+		$values = array();
+
+		foreach($this->fields as $key => $value)
+		{
+			$value = $this->$key;
+			if(isset($value) && $value != '')
+			{
+				$insert_fieldList .= "`" . $key . "`,";
+				$update_fieldList .= "`" . $key . "` = ?,";
+				$valueList .= "?,";
+				$values[] = $value;
+			}
+		}
+		$values = array_merge($values, $values);
+
+		$sql = "INSERT INTO `" . $this->table . "` (" . substr($insert_fieldList, 0, -1) . ") VALUES (" . substr($valueList, 0, -1) . ")
+			    ON DUPLICATE KEY UPDATE " . substr($update_fieldList, 0, -1);
+
+		$query = $this->db->prepare($sql);
+		$query->execute($values);
+		return $this->db->lastInsertId();
 	}
 }

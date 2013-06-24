@@ -11,7 +11,12 @@ abstract class BasicModel
 	// Return a JSON string which represents this object by default
 	public function __toString()
 	{
-		return(json_encode($this->fields));
+		return(json_encode($this->toArray()));
+	}
+
+	public function toArray()
+	{
+		return $this->fields;
 	}
 
 	//General Get and Set Handlers
@@ -19,7 +24,7 @@ abstract class BasicModel
 	{
 		if(method_exists($this, $functionName = 'get' . ucfirst($name)))
 			return $this->$functionName();
-		elseif(property_exists(self, $varName = '_' . $name))
+		elseif(property_exists(get_class(), $varName = '_' . $name))
 			return $this->$varName;
 		elseif(array_key_exists($name, $this->fields))
 			return $this->_getField($name);
@@ -31,13 +36,21 @@ abstract class BasicModel
 	{
 		if(method_exists($this, $functionName = 'set' . ucfirst($name)))
 			return $this->$functionName($value);
-		elseif(property_exists(self, $varName = '_' . $name))
+		elseif(property_exists(get_class(), $varName = '_' . $name))
 			return $this->$varName = $value;
 		elseif(array_key_exists($name, $this->fields))
-			return $this->_setField($name);
+			return $this->_setField($name, $value);
 		else
 			throw new Exception("$name is not available in current scope");
 
+	}
+
+	public function __isset($name)
+	{
+		if(property_exists(get_class(), $varName = '_' . $name) || array_key_exists($name, $this->fields))
+			return true;
+		else
+			return false;
 	}
 
 	//General Field Handlers
